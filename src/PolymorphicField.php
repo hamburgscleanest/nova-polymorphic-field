@@ -1,6 +1,6 @@
 <?php
 
-namespace MichielKempen\NovaPolymorphicField;
+namespace hamburgscleanest\NovaPolymorphicField;
 
 use Laravel\Nova\Fields\Field;
 use Laravel\Nova\Http\Requests\NovaRequest;
