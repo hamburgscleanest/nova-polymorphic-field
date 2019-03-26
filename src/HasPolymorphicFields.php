@@ -1,6 +1,6 @@
 <?php
 
-namespace MichielKempen\NovaPolymorphicField;
+namespace hamburgscleanest\NovaPolymorphicField;
 
 use Illuminate\Support\Facades\Route;
 use Laravel\Nova\Fields\FieldCollection;
