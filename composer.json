@@ -1,5 +1,5 @@
 {
-    "name": "michielkempen/nova-polymorphic-field",
+    "name": "hamburgscleanest/nova-polymorphic-field",
     "description": "A Laravel Nova field container allowing to depend on other fields values",
     "keywords": [
         "laravel",
@@ -11,13 +11,13 @@
     },
     "autoload": {
         "psr-4": {
-            "MichielKempen\\NovaPolymorphicField\\": "src/"
+            "hamburgscleanest\\NovaPolymorphicField\\": "src/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "MichielKempen\\NovaPolymorphicField\\FieldServiceProvider"
+                "hamburgscleanest\\NovaPolymorphicField\\FieldServiceProvider"
             ]
         }
     },
