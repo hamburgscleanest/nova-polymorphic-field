@@ -73,7 +73,7 @@ class PolymorphicField extends Field
 
         foreach ($this->meta['types'] as &$type)
         {
-            $type['active'] = $this->mapToKey($type['value']) == $model->{$this->attribute . '_type'};
+            $type['active'] = $this->mapToKey($type['value']) === $model->{$this->attribute . '_type'};
 
             foreach ($type['active'] ? $type['fields'] : [] as $field)
             {
@@ -107,7 +107,7 @@ class PolymorphicField extends Field
         {
             $relatedModel = new $type['value'];
 
-            if ($this->mapToKey($type['value']) == $model->{$attribute . '_type'})
+            if ($this->mapToKey($type['value']) === $model->{$attribute . '_type'})
             {
                 $relatedModel = $relatedModel->newQuery()->findOrFail($model->{$attribute . '_id'});
             }
