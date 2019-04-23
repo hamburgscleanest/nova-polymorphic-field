@@ -6,6 +6,10 @@ use Laravel\Nova\Fields\Field;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
+/**
+ * Class PolymorphicField
+ * @package hamburgscleanest\NovaPolymorphicField
+ */
 class PolymorphicField extends Field
 {
 
@@ -20,31 +24,31 @@ class PolymorphicField extends Field
      * PolymorphicField constructor.
      *
      * @param string $name
-     * @param null $attribute
+     * @param string|null $attribute
      */
-    public function __construct($name, $attribute = null)
+    public function __construct(string $name, string $attribute = null)
     {
         parent::__construct($name, $attribute);
 
-        $this->withMeta(['types' => []]);
-
-        $this->displayUsing(function($value)
-        {
-            foreach ($this->meta['types'] as $type)
+        $this
+            ->withMeta(['types' => []])
+            ->displayUsing(function($value)
             {
-                if ($this->mapToKey($type['value']) == $value)
+                foreach ($this->meta['types'] as $type)
                 {
-                    return $type['label'];
+                    if ($this->mapToKey($type['value']) === $value)
+                    {
+                        return $type['label'];
+                    }
                 }
-            }
 
-            return null;
-        });
+                return null;
+            });
     }
 
     /**
-     * @param $typeClass
-     * @param $label
+     * @param string $typeClass
+     * @param string $label
      * @param array $fields
      * @return PolymorphicField
      */
@@ -60,8 +64,8 @@ class PolymorphicField extends Field
     }
 
     /**
-     * @param mixed $model
-     * @param null $attribute
+     * @param object $model
+     * @param string|null $attribute
      */
     public function resolveForDisplay($model, $attribute = null) : void
     {
@@ -91,22 +95,21 @@ class PolymorphicField extends Field
     /**
      * Retrieve values of dependency fields
      *
-     * @param mixed $model
+     * @param object $model
      * @param string $attribute
      * @return array|mixed
      */
     protected function resolveAttribute($model, $attribute)
     {
-        $result = $this->mapToClass($model->{$this->attribute . '_type'});
+        $attribute = $attribute ?? $this->attribute;
 
         foreach ($this->meta['types'] as $type)
         {
-
             $relatedModel = new $type['value'];
 
-            if ($this->mapToKey($type['value']) == $model->{$this->attribute . '_type'})
+            if ($this->mapToKey($type['value']) == $model->{$attribute . '_type'})
             {
-                $relatedModel = $relatedModel->newQuery()->findOrFail($model->{$this->attribute . '_id'});
+                $relatedModel = $relatedModel->newQuery()->findOrFail($model->{$attribute . '_id'});
             }
 
             foreach ($type['fields'] as $field)
@@ -116,7 +119,9 @@ class PolymorphicField extends Field
 
         }
 
-        return $result;
+        $anwerableClass = $model->{$attribute . '_type'};
+
+        return $anwerableClass ? $this->mapToClass($anwerableClass) : null;
     }
 
     /**
@@ -129,20 +134,21 @@ class PolymorphicField extends Field
      */
     protected function fillAttributeFromRequest(NovaRequest $request, $requestAttribute, $model, $attribute) : void
     {
+        $attribute = $attribute ?? $this->attribute;
+
         foreach ($this->meta['types'] as $type)
         {
-
-            if ($request->get($attribute) == $type['value'])
+            if ($request->get($attribute) === $type['value'])
             {
                 $relatedModel = new $type['value'];
 
-                if ($this->mapToKey($type['value']) == $model->{$this->attribute . '_type'})
+                if ($this->mapToKey($type['value']) === $model->{$attribute . '_type'})
                 {
-                    $relatedModel = $relatedModel->newQuery()->findOrFail($model->{$this->attribute . '_id'});
-                } elseif (!is_null($model->{$this->attribute . '_type'}))
+                    $relatedModel = $relatedModel->newQuery()->findOrFail($model->{$attribute . '_id'});
+                } elseif (!\is_null($model->{$attribute . '_type'}))
                 {
-                    $oldRelatedClass = $this->mapToClass($model->{$this->attribute . '_type'});
-                    $oldRelatedModel = (new $oldRelatedClass)->newQuery()->findOrFail($model->{$this->attribute . '_id'});
+                    $oldRelatedClass = $this->mapToClass($model->{$attribute . '_type'});
+                    $oldRelatedModel = (new $oldRelatedClass)->newQuery()->findOrFail($model->{$attribute . '_id'});
                     $oldRelatedModel->delete();
                 }
 
@@ -156,24 +162,23 @@ class PolymorphicField extends Field
                 $model->{$this->attribute . '_id'} = $relatedModel->id;
                 $model->{$this->attribute . '_type'} = $this->mapToKey($type['value']);
             }
-
         }
     }
 
     /**
-     * @param $class
+     * @param string $class
      * @return string
      */
-    protected function mapToKey($class) : string
+    protected function mapToKey(string $class) : string
     {
         return \array_search($class, Relation::$morphMap) ?: $class;
     }
 
     /**
-     * @param $key
+     * @param string $key
      * @return string
      */
-    protected function mapToClass($key) : string
+    protected function mapToClass(string $key) : string
     {
         return Relation::$morphMap[$key] ?? $key;
     }
