@@ -56,7 +56,7 @@
 
 			/**
 			 * Do not show the type select option if this is the edit screen
-			 * And we don't want the user to change the polumorphic type.
+			 * And we don't want the user to change the polymorphic type.
 			 */
 			shouldShowTypeSelect() {
 				return !(this.resourceId && this.field.hideTypeWhenUpdating)

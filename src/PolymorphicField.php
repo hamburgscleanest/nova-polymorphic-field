@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 
 class PolymorphicField extends Field
 {
+
     /**
      * The field's component.
      *
@@ -27,16 +28,17 @@ class PolymorphicField extends Field
 
         $this->withMeta(['types' => []]);
 
-        $this->displayUsing(function ($value) {
-            $result = null;
-
-            foreach ($this->meta['types'] as $type) {
-                if ($this->mapToKey($type['value']) == $value) {
-                    $result = $type['label'];
+        $this->displayUsing(function($value)
+        {
+            foreach ($this->meta['types'] as $type)
+            {
+                if ($this->mapToKey($type['value']) == $value)
+                {
+                    return $type['label'];
                 }
             }
 
-            return $result;
+            return null;
         });
     }
 
@@ -46,34 +48,42 @@ class PolymorphicField extends Field
      * @param array $fields
      * @return PolymorphicField
      */
-    public function type(string $label, string $typeClass, array $fields)
+    public function type(string $label, string $typeClass, array $fields) : PolymorphicField
     {
-        return $this->withMeta([
-            'types' => array_merge($this->meta['types'], [
-                [
-                    'value' => $typeClass,
-                    'label' => $label,
-                    'fields' => $fields
-                ]
-            ]),
-        ]);
+        $this->meta['types'][] = [
+            'value'  => $typeClass,
+            'label'  => $label,
+            'fields' => $fields
+        ];
+
+        return $this;
     }
 
     /**
      * @param mixed $model
      * @param null $attribute
      */
-    public function resolveForDisplay($model, $attribute = null)
+    public function resolveForDisplay($model, $attribute = null) : void
     {
-        parent::resolveForDisplay($model, $this->attribute.'_type');
+        parent::resolveForDisplay($model, $this->attribute . '_type');
 
-        foreach ($this->meta['types'] as $index => $type) {
-            $this->meta['types'][$index]['active'] = $this->mapToKey($type['value']) == $model->{$this->attribute . '_type'};
+        foreach ($this->meta['types'] as &$type)
+        {
+            $type['active'] = $this->mapToKey($type['value']) == $model->{$this->attribute . '_type'};
 
-            foreach ($type['fields'] as $field) {
-                try {
+            foreach ($type['active'] ? $type['fields'] : [] as $field)
+            {
+                try
+                {
                     $field->resolveForDisplay($model->{$this->attribute});
-                } catch (\Exception $e) {}
+                }
+                catch (\Exception $e)
+                {
+                    if (\app()->environment('local'))
+                    {
+                        throw $e;
+                    }
+                }
             }
         }
     }
@@ -89,15 +99,18 @@ class PolymorphicField extends Field
     {
         $result = $this->mapToClass($model->{$this->attribute . '_type'});
 
-        foreach ($this->meta['types'] as $type) {
+        foreach ($this->meta['types'] as $type)
+        {
 
             $relatedModel = new $type['value'];
 
-            if($this->mapToKey($type['value']) == $model->{$this->attribute . '_type'}) {
+            if ($this->mapToKey($type['value']) == $model->{$this->attribute . '_type'})
+            {
                 $relatedModel = $relatedModel->newQuery()->findOrFail($model->{$this->attribute . '_id'});
             }
 
-            foreach ($type['fields'] as $field) {
+            foreach ($type['fields'] as $field)
+            {
                 $field->resolve($relatedModel);
             }
 
@@ -114,29 +127,34 @@ class PolymorphicField extends Field
      * @param object $model
      * @param string $attribute
      */
-    protected function fillAttributeFromRequest(NovaRequest $request, $requestAttribute, $model, $attribute)
+    protected function fillAttributeFromRequest(NovaRequest $request, $requestAttribute, $model, $attribute) : void
     {
-        foreach ($this->meta['types'] as $type) {
+        foreach ($this->meta['types'] as $type)
+        {
 
-            if($request->get($attribute) == $type['value']) {
+            if ($request->get($attribute) == $type['value'])
+            {
                 $relatedModel = new $type['value'];
 
-                if($this->mapToKey($type['value']) == $model->{$this->attribute . '_type'}) {
+                if ($this->mapToKey($type['value']) == $model->{$this->attribute . '_type'})
+                {
                     $relatedModel = $relatedModel->newQuery()->findOrFail($model->{$this->attribute . '_id'});
-                } elseif(! is_null($model->{$this->attribute . '_type'})) {
+                } elseif (!is_null($model->{$this->attribute . '_type'}))
+                {
                     $oldRelatedClass = $this->mapToClass($model->{$this->attribute . '_type'});
                     $oldRelatedModel = (new $oldRelatedClass)->newQuery()->findOrFail($model->{$this->attribute . '_id'});
                     $oldRelatedModel->delete();
                 }
 
-                foreach ($type['fields'] as $field) {
+                foreach ($type['fields'] as $field)
+                {
                     $field->fill($request, $relatedModel);
                 }
 
                 $relatedModel->save();
 
-                $model->{$this->attribute.'_id'} = $relatedModel->id;
-                $model->{$this->attribute.'_type'} = $this->mapToKey($type['value']);
+                $model->{$this->attribute . '_id'} = $relatedModel->id;
+                $model->{$this->attribute . '_type'} = $this->mapToKey($type['value']);
             }
 
         }
@@ -146,16 +164,16 @@ class PolymorphicField extends Field
      * @param $class
      * @return string
      */
-    protected function mapToKey($class)
+    protected function mapToKey($class) : string
     {
-        return array_search($class, Relation::$morphMap) ?: $class;
+        return \array_search($class, Relation::$morphMap) ?: $class;
     }
 
     /**
      * @param $key
      * @return string
      */
-    protected function mapToClass($key)
+    protected function mapToClass($key) : string
     {
         return Relation::$morphMap[$key] ?? $key;
     }
@@ -166,12 +184,10 @@ class PolymorphicField extends Field
      *
      * @return self
      */
-    public function hideTypeWhenUpdating()
+    public function hideTypeWhenUpdating() : self
     {
-        $this->withMeta([
+        return $this->withMeta([
             'hideTypeWhenUpdating' => true,
         ]);
-
-        return $this;
     }
 }
