@@ -69,17 +69,19 @@ class PolymorphicField extends Field
      */
     public function resolveForDisplay($model, $attribute = null) : void
     {
-        parent::resolveForDisplay($model, $this->attribute . '_type');
+        $attribute = $attribute ?? $this->attribute;
+
+        parent::resolveForDisplay($model, $attribute . '_type');
 
         foreach ($this->meta['types'] as &$type)
         {
-            $type['active'] = $this->mapToKey($type['value']) === $model->{$this->attribute . '_type'};
+            $type['active'] = $this->mapToKey($type['value']) === $model->{$attribute . '_type'};
 
             foreach ($type['active'] ? $type['fields'] : [] as $field)
             {
                 try
                 {
-                    $field->resolveForDisplay($model->{$this->attribute});
+                    $field->resolveForDisplay($model->{$attribute});
                 }
                 catch (\Exception $e)
                 {
