@@ -4719,10 +4719,10 @@ laravel-mix@^1.0:
     webpack-notifier "^1.5.0"
     yargs "^8.0.1"
 
-laravel-nova@^1.0:
-  version "1.0.11"
-  resolved "https://registry.yarnpkg.com/laravel-nova/-/laravel-nova-1.0.11.tgz#acece08257923a0c5c1e9e0301219b987a7a51f6"
-  integrity sha512-qTUpC1btgEd9uclDAHLUzVrOXVhg5axgueWVxVxdkH+eMzE0JITcMQ2EH98LmQALqnNCptIFKBqXw+1gDQqr3Q==
+laravel-nova@^1.12:
+  version "1.12.3"
+  resolved "https://registry.yarnpkg.com/laravel-nova/-/laravel-nova-1.12.3.tgz#01a24339dcbc674738c686dfa2b6c8108e2fb540"
+  integrity sha512-mK0z8pGmMCc6AYpvB7hBJM1VCgQo4t0w4LsLXkEyk6dsngGdgtSJPE/TpieiEStzg1pve9AShsUWwKTjSl6Ygw==
   dependencies:
     babel-plugin-syntax-jsx "^6.18.0"
     form-backend-validation "^2.3.3"
